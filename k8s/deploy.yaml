@@ -3,7 +3,6 @@
   roles:
     - gke
     - odb23cfree
-    # - postgres
     - kafka
     - hz
     - cdc-job
