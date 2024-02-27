@@ -5,6 +5,9 @@ The GKE cluster and all the deployments on it are done by your laptop using Ansi
 
 Finally the playbook deploys the Hazelcast streaming job which starts streaming changes from `customers` table and inserts the records into a Hazelcast map. The job is deployed using Hazelcast CLC.
 
+### Pipeline
+The Hazelcast pipeline that recieves the changes from Oracle and inserts them into a Hazelcast map is defined in `CDCOracle.java`.
+
 ## GKE
 ### Pre-requisites
 1. [Service Account](https://developers.google.com/identity/protocols/oauth2/service-account#creatinganaccount) with permissions to create GKE. The service account must be downloaded as a JSON file and located in `~/.gcp/credentials.json`
@@ -54,4 +57,6 @@ To shutdown the cluster execute `ansible-playbook k8s/undeploy.yaml` and delete 
 1. [Part 3](https://debezium.io/blog/2023/06/29/debezium-oracle-series-part-3/)
 ## TODO
 1. Oracle setup script should be automated
-1. Configure [Jeager](https://www.jaegertracing.io/docs/1.52/operator/) and [cert-manager](https://cert-manager.io/docs/tutorials/) in [GKE](https://cert-manager.io/docs/tutorials/getting-started-with-cert-manager-on-google-kubernetes-engine-using-lets-encrypt-for-ingress-ssl/).   
+1. Filter DDL events from Oracle in pipeline
+1. Create a `Customer` domain object that use json serialization for transforming from Oracle to POJO and then compact serialization before storing in the database
+1. Turn on [singnaling](https://debezium.io/documentation/reference/1.9/configuration/signalling.html)
