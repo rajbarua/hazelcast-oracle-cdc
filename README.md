@@ -39,11 +39,6 @@ The next command will deploy the pipeline and the next one starts producing the 
 
 ### Undo
 To shutdown the cluster execute `ansible-playbook k8s/undeploy.yaml` and delete the cluster from GCP console.
-### Architecture
-_Work in progress_
-![Architecture](./images/Arch.png)
-
-
 
 
 ## Technologies of interest

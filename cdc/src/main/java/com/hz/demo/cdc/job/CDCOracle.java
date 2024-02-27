@@ -1,13 +1,16 @@
 package com.hz.demo.cdc.job;
 
+
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.jet.Job;
+import com.hazelcast.jet.cdc.ChangeRecord;
 import com.hazelcast.jet.cdc.DebeziumCdcSources;
 import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.config.ProcessingGuarantee;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.Sinks;
+import com.hazelcast.jet.pipeline.StreamSource;
 
 /**
  * This class deploys a job that reads from Oracle via CDC and writes to a Map with short expiry
@@ -39,9 +42,9 @@ public class CDCOracle {
         instance.getJet().newJob(p, jobConfig);
     }
     private Pipeline createPipeline() {
-        Pipeline pipeline = Pipeline.create();
-        pipeline.readFrom(
-            DebeziumCdcSources.debezium("hz_customers", "io.debezium.connector.oracle.OracleConnector")
+        
+        StreamSource<ChangeRecord> source 
+            = DebeziumCdcSources.debezium("hz_customers", "io.debezium.connector.oracle.OracleConnector")
                 .setProperty("connector.class", "io.debezium.connector.oracle.OracleConnector")
                 .setProperty("database.hostname", "oracle-db23c-free-oracle-db23c-free.default.svc.cluster.local")
                 .setProperty("database.port", "1521")
@@ -53,13 +56,15 @@ public class CDCOracle {
                 // .setProperty("table.include.list", ".CUSTOMERS")
                 // Debezium 1.9.x
                 .setProperty("database.server.name", "server1")
-                // .setProperty("database.history.kafka.bootstrap.servers", "my-cluster-kafka-bootstrap.kafka.svc:9092")
-                // .setProperty("database.history.kafka.topic", "schema-changes.inventory")
-                .build())
+                .setProperty("database.history.kafka.bootstrap.servers", "my-cluster-kafka-bootstrap.kafka.svc:9092")
+                .setProperty("database.history.kafka.topic", "schema-changes.inventory")
+                .build();
             // .withNativeTimestamps(0)
-            .withIngestionTimestamps()
-            .peek()
-            .writeTo(Sinks.logger());
+            Pipeline pipeline = Pipeline.create();
+            pipeline.readFrom(source)
+                .withIngestionTimestamps()
+                .peek()
+                .writeTo(Sinks.map("customers", e -> e.key().toString(), e -> e.value().toString()));
                 
         return pipeline;
     }
