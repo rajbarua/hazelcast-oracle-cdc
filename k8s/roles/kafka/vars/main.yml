@@ -1,9 +1,0 @@
----
-# vars file for k8s/roles/gke
-zone: asia-south1-a
-region: asia-south1
-location: asia
-project_id: hazelcast-33
-docker_credentials_file: "{{ lookup('env','HOME') }}/.docker/config.json"
-repository_id: "rajbarua-docker"
-

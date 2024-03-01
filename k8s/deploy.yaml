@@ -3,7 +3,6 @@
   roles:
     - gke
     - odb23cfree
-    - kafka
     - hz
     - cdc-job
 

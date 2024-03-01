@@ -11,8 +11,5 @@
   shell: "kubectl delete all --all -n {{ item }}"
   loop:
     - default
-    - kafka
-    - monitoring
   tags:
-    - kafka
     - all

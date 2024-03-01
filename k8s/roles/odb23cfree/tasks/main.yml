@@ -40,9 +40,6 @@
   register: secret_value
   tags:
     - oracle
-    - kafka
-    - kafka-connect
-    - kafka-connector
 # TODO See https://container-registry.oracle.com/ords/f?p=113:4:106652417405591:::4:P4_REPOSITORY,AI_REPOSITORY,AI_REPOSITORY_NAME,P4_REPOSITORY_NAME,P4_EULA_ID,P4_BUSINESS_AREA_ID:1863,1863,Oracle%20Database%20Free,Oracle%20Database%20Free,1,0&cs=3eoeIWgF4tP2wM5IczA6pwvogAU5FDqBzxpXkGF1SxkvA-v0-XS0F9mk868c4U6MeyXVePaRy_mdEjCl_kXjk-Q on running scripts
 # - name: Execute sql file archivelogs.sql
 #   shell: |

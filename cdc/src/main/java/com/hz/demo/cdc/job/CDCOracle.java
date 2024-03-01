@@ -56,8 +56,6 @@ public class CDCOracle {
                 // .setProperty("table.include.list", ".CUSTOMERS")
                 // Debezium 1.9.x
                 .setProperty("database.server.name", "server1")
-                .setProperty("database.history.kafka.bootstrap.servers", "my-cluster-kafka-bootstrap.kafka.svc:9092")
-                .setProperty("database.history.kafka.topic", "schema-changes.inventory")
                 .build();
             // .withNativeTimestamps(0)
             Pipeline pipeline = Pipeline.create();
