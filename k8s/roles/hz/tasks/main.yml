@@ -136,8 +136,8 @@
           type: Smart
           discoveryServiceType: LoadBalancer
           memberAccess: LoadBalancer
-        tls:
-          secretName: hazelcast-ssl
+        # tls:
+        #   secretName: hazelcast-ssl
   tags:
     - hz-secondary
     - hz
@@ -211,8 +211,8 @@
           type: Smart
           discoveryServiceType: LoadBalancer
           memberAccess: LoadBalancer
-        tls:
-          secretName: hazelcast-ssl
+        # tls:
+        #   secretName: hazelcast-ssl
   tags:
     - hz-primary
     - hz
@@ -252,12 +252,12 @@
         hazelcastClusters:
           - address: hz-primary
             name: hz-primary
-            tls:
-              secretName: hazelcast-ssl
+            # tls:
+            #   secretName: hazelcast-ssl
           - address: hz-secondary
             name: hz-secondary
-            tls:
-              secretName: hazelcast-ssl
+            # tls:
+            #   secretName: hazelcast-ssl
         persistence:
           enabled: true
           size: 1Gi

@@ -1,6 +1,6 @@
 ---
 # vars file for k8s/roles/hz
-primary_cluster_size: 1
+primary_cluster_size: 3
 secondary_cluster_size: 3
 hazelcast_version: 5.3.6
 hazelcast_mc_version: latest-snapshot

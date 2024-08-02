@@ -78,8 +78,8 @@
   tags:
     - job
 - name: Add the external IP to CLC config
-  shell: "clc config add hz-primary cluster.address={{hz_primary_ip.stdout}}:5701 cluster.name=hz-primary ssl.enabled=true ssl.skip-verify=true"
-  # shell: "clc config add hz-primary cluster.address={{hz_primary_ip.stdout}}:5701 cluster.name=hz-primary"
+  # shell: "clc config add hz-primary cluster.address={{hz_primary_ip.stdout}}:5701 cluster.name=hz-primary ssl.enabled=true ssl.skip-verify=true"
+  shell: "clc config add hz-primary cluster.address={{hz_primary_ip.stdout}}:5701 cluster.name=hz-primary"
   tags:
     - job
 - name: Execute Hazelcast Command Line Client to deploy the code

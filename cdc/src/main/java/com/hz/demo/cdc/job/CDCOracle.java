@@ -11,13 +11,14 @@ import com.hazelcast.jet.config.ProcessingGuarantee;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.Sinks;
 import com.hazelcast.jet.pipeline.StreamSource;
+import com.hz.demo.cdc.domain.Customer;
 
 /**
  * This class deploys a job that reads from Oracle via CDC and writes to a Map with short expiry
  */
 public class CDCOracle {
 
-
+    private static final String run = "1";
     private static final String JOB_NAME = "cdc-oracle-job";
     public static void main(String[] args) {
         new CDCOracle().run();
@@ -31,10 +32,10 @@ public class CDCOracle {
     public void deployJob(HazelcastInstance instance) {
         Pipeline p = createPipeline();
         JobConfig jobConfig = new JobConfig()
-            .setName(JOB_NAME)
+            .setName(JOB_NAME+run)
             .setProcessingGuarantee(ProcessingGuarantee.EXACTLY_ONCE)
             .addClass(CDCOracle.class);
-        Job oldJob = instance.getJet().getJob(JOB_NAME);
+        Job oldJob = instance.getJet().getJob(JOB_NAME+run);
         if (oldJob != null) {
             oldJob.cancel();
         }
@@ -62,7 +63,10 @@ public class CDCOracle {
             pipeline.readFrom(source)
                 .withIngestionTimestamps()
                 .peek()
-                .writeTo(Sinks.map("customers", e -> e.key().toString(), e -> e.value().toString()));
+                .filter(e -> !e.key().toString().contains("databaseName"))
+                // .peek(e -> run+"Mapped object: "+e.key().toMap().get("ID"))
+                .writeTo(Sinks.map("customers"+run, e -> e.key().toMap().get("ID"), 
+                                    e -> e.value().toObject(Customer.class)));
                 
         return pipeline;
     }
