@@ -1,65 +1,70 @@
 ---
 ######################
+## Following was required whe Hazelcast used Debezium 1.9.7.Final and the corresponding Debezium Oracle connector. 
+## Hazelcast 5.5.2 uses Debezium 2.7.3.Final and therefore the following is not required.
+######################
 ## Building a custom Debezium Oracle connector as Hazelcast uses Debezium 1.9.7.Final and the corresponding Debezium Oracle connector
 ## does not support Oracle 23c free. Debezium still does not officially support Oracle 23c free but the support is imminent.
 ## https://issues.redhat.com/browse/DBZ-7194 - specific change so that Debezium connector recognizes Oracle 23c free version
 ## https://issues.redhat.com/browse/DBZ-5655 - Other changes to take advatages of new features in Oracle 23c free
 ## https://issues.redhat.com/browse/DBZ-6502 - Issue with ojdbc8-23 with fixes
 ######################
-- name: Clone Debezium repository and checkout tag v1.9.7.Final
-  git:
-    repo: https://github.com/debezium/debezium.git
-    dest: ../../debezium
-    version: v1.9.7.Final
-    force: true
-  tags:
-    - deb-con
-- name: Cherry-pick DBZ-7194
-  shell: git cherry-pick -X theirs {{ item }}
-  args:
-    chdir: ../../debezium
-  loop:
-    - 937677cc8935d47db0f0ea682b3ca2499f2da8af
-    - 425543d1e017e93baf955e047ce705568fb95a1d
-  tags:
-    - deb-con
-- name: Copy manually modified file for the connector as DBZ-6502 has complex changes therefore cherry-pick does not work
-  copy:
-    dest: "{{ item.location }}"
-    src: "{{ item.name }}"
-  loop:
-    - { name: 'OracleConnection.java', location: '../../debezium/debezium-connector-oracle/src/main/java/io/debezium/connector/oracle/OracleConnection.java'} 
-    - { name: 'OracleSnapshotChangeEventSource.java', location: '../../debezium/debezium-connector-oracle/src/main/java/io/debezium/connector/oracle/OracleSnapshotChangeEventSource.java'} 
-    - { name: 'LogMinerStreamingChangeEventSource.java', location: '../../debezium/debezium-connector-oracle/src/main/java/io/debezium/connector/oracle/logminer/LogMinerStreamingChangeEventSource.java'} 
-  tags:
-    - deb-con
-- name: Add maven wrapper of version 3.8.8 to avoid compilation issues with newer maven versions
-  # https://stackoverflow.com/questions/75652635/a-required-class-was-missing-while-executing-maven-plugin-with-github-action
-  shell: mvn wrapper:wrapper -Dmaven=3.8.8
-  args:
-    chdir: ../../debezium
-  tags:
-    - deb-con
-- name: Build the connector
-  shell: ./mvnw clean install -pl debezium-connector-oracle -am
-  args:
-    chdir: ../../debezium
-  tags:
-    - deb-con
-- name: Install file. This will override the dependency in the local maven repository
-  shell: >
-    mvn install:install-file
-    -Dfile=debezium-connector-oracle/target/debezium-connector-oracle-1.9.7.Final.jar 
-    -Dsources=debezium-connector-oracle/target/debezium-connector-oracle-1.9.7.Final-sources.jar 
-    -DgroupId=io.debezium 
-    -DartifactId=debezium-connector-oracle 
-    -Dversion=1.9.7.Final 
-    -Dpackaging=jar
-  args:
-    chdir: ../../debezium
-  tags:
-    - deb-con
-    - deb-con-install
+# - name: Clone Debezium repository and checkout tag v1.9.7.Final
+#   git:
+#     repo: https://github.com/debezium/debezium.git
+#     dest: ../../debezium
+#     version: v1.9.7.Final
+#     force: true
+#   tags:
+#     - deb-con
+# - name: Cherry-pick DBZ-7194
+#   shell: git cherry-pick -X theirs {{ item }}
+#   args:
+#     chdir: ../../debezium
+#   loop:
+#     - 937677cc8935d47db0f0ea682b3ca2499f2da8af
+#     - 425543d1e017e93baf955e047ce705568fb95a1d
+#   tags:
+#     - deb-con
+# - name: Copy manually modified file for the connector as DBZ-6502 has complex changes therefore cherry-pick does not work
+#   copy:
+#     dest: "{{ item.location }}"
+#     src: "{{ item.name }}"
+#   loop:
+#     - { name: 'OracleConnection.java', location: '../../debezium/debezium-connector-oracle/src/main/java/io/debezium/connector/oracle/OracleConnection.java'} 
+#     - { name: 'OracleSnapshotChangeEventSource.java', location: '../../debezium/debezium-connector-oracle/src/main/java/io/debezium/connector/oracle/OracleSnapshotChangeEventSource.java'} 
+#     - { name: 'LogMinerStreamingChangeEventSource.java', location: '../../debezium/debezium-connector-oracle/src/main/java/io/debezium/connector/oracle/logminer/LogMinerStreamingChangeEventSource.java'} 
+#   tags:
+#     - deb-con
+# - name: Add maven wrapper of version 3.8.8 to avoid compilation issues with newer maven versions
+#   # https://stackoverflow.com/questions/75652635/a-required-class-was-missing-while-executing-maven-plugin-with-github-action
+#   shell: mvn wrapper:wrapper -Dmaven=3.8.8
+#   args:
+#     chdir: ../../debezium
+#   tags:
+#     - deb-con
+# - name: Build the connector
+#   shell: ./mvnw clean install -pl debezium-connector-oracle -am
+#   args:
+#     chdir: ../../debezium
+#   tags:
+#     - deb-con
+# - name: Install file. This will override the dependency in the local maven repository
+#   shell: >
+#     mvn install:install-file
+#     -Dfile=debezium-connector-oracle/target/debezium-connector-oracle-1.9.7.Final.jar 
+#     -Dsources=debezium-connector-oracle/target/debezium-connector-oracle-1.9.7.Final-sources.jar 
+#     -DgroupId=io.debezium 
+#     -DartifactId=debezium-connector-oracle 
+#     -Dversion=1.9.7.Final 
+#     -Dpackaging=jar
+#   args:
+#     chdir: ../../debezium
+#   tags:
+#     - deb-con
+#     - deb-con-install
+
+
 ######################
 ## pipeline via CLC
 ######################

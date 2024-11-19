@@ -3,7 +3,7 @@
 zone: asia-south1-a
 region: asia-south1
 location: asia
-project_id: hazelcast-33
+project_id: solution-architects-415712
 gcloud_sa_path: "gcp/credentials.json"
 credentials_file: "{{ lookup('env','HOME') }}/{{ gcloud_sa_path }}"
 repository_id: "rajbarua-docker"

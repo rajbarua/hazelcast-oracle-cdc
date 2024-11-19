@@ -2,7 +2,7 @@
 # vars file for k8s/roles/hz
 primary_cluster_size: 3
 secondary_cluster_size: 3
-hazelcast_version: 5.3.6
+hazelcast_version: 5.5.2
 hazelcast_mc_version: latest-snapshot
 self_signed_cert_key_file: "~/hazelcast/hazelcast.key"
 self_signed_cert_cert_file: "~/hazelcast/hazelcast.pem"

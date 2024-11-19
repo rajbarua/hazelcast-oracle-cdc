@@ -1,28 +1,27 @@
 package com.hz.demo.cdc.domain;
 import java.io.Serializable;
-import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Customer implements Serializable {
     @JsonProperty("id")
-    UUID id;
+    String id;
     @JsonProperty("name")
     String name;
 
     public Customer() {
     }
 
-    public Customer(UUID id, String name) {
+    public Customer(String id, String name) {
         this.id = id;
         this.name = name;
     }
 
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(String id) {
         this.id = id;
     }
 

@@ -207,6 +207,8 @@
           remoteURLs:
           - https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc8/23.3.0.23.09/ojdbc8-23.3.0.23.09.jar
           - https://repo1.maven.org/maven2/com/oracle/database/xml/xdb/23.3.0.23.09/xdb-23.3.0.23.09.jar
+          - https://repo1.maven.org/maven2/io/debezium/debezium-connector-oracle/2.7.3.Final/debezium-connector-oracle-2.7.3.Final.jar
+          - https://repo1.maven.org/maven2/io/debezium/debezium-ddl-parser/2.7.3.Final/debezium-ddl-parser-2.7.3.Final.jar
         exposeExternally:
           type: Smart
           discoveryServiceType: LoadBalancer

@@ -7,7 +7,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <spring-boot.version>3.1.5</spring-boot.version>
         <jib-maven-plugin.version>3.4.0</jib-maven-plugin.version>
-        <hazelcast.version>5.3.6</hazelcast.version>
+        <hazelcast.version>5.5.2</hazelcast.version>
         <image>${env.region}-docker.pkg.dev/${env.project_id}/${env.repository_id}/${project.artifactId}</image>
     </properties>
     <modelVersion>4.0.0</modelVersion>
@@ -23,7 +23,7 @@
         <dependencies>
             <dependency>
                 <groupId>com.hazelcast</groupId>
-                <artifactId>hazelcast</artifactId>
+                <artifactId>hazelcast-enterprise</artifactId>
                 <version>${hazelcast.version}</version>
             </dependency>
             <dependency>
