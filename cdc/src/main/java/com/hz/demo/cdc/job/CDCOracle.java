@@ -208,7 +208,7 @@ public class CDCOracle implements Serializable{
                             stmt.setString(paramIndex++, record.kzhuq());
                             stmt.setString(paramIndex++, record.vbeln());
                             stmt.setString(paramIndex++, record.posnr());
-                            stmt.setString(paramIndex++, record.idatu());
+                            // stmt.setString(paramIndex++, record.idatu());
                         }))
                 .setName("Upsert target row");
 
@@ -267,7 +267,8 @@ public class CDCOracle implements Serializable{
                       s.ausme, s.mgewi, s.gewei, s.tbnum, s.ivnum, s.ivpos,
                       s.betyp, s.benum, s.lenum, s.qplos, s.vfdat, s.qkapv,
                       s.kober, s.lgort, s.virgo, s.trame, s.kzhuq, s.vbeln,
-                      s.posnr)                    """;
+                      s.posnr)                    
+                """;
     }
 
     /*
