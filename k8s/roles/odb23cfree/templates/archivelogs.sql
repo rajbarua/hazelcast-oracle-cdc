@@ -25,13 +25,13 @@ ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
 -- ALTER TABLE C##DBZUSER.CUSTOMERS ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 
 -- Configure Oracle: User setup
-CONNECT sys/ModfyB55ca@FREE as sysdba;
+CONNECT sys/CQyt1SpmvZ@FREE as sysdba;
 CREATE TABLESPACE logminer_tbs DATAFILE '/opt/oracle/oradata/FREE/logminer_tbs.dbf' SIZE 25M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
 
-CONNECT sys/ModfyB55ca@FREEPDB1 as sysdba;
+CONNECT sys/CQyt1SpmvZ@FREEPDB1 as sysdba;
 CREATE TABLESPACE logminer_tbs DATAFILE '/opt/oracle/oradata/FREE/FREEPDB1/logminer_tbs.dbf' SIZE 25M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
 
-CONNECT sys/ModfyB55ca@FREE as sysdba;
+CONNECT sys/CQyt1SpmvZ@FREE as sysdba;
 CREATE USER c##dbzuser IDENTIFIED BY dbz DEFAULT TABLESPACE LOGMINER_TBS QUOTA UNLIMITED ON LOGMINER_TBS CONTAINER=ALL;
 
 GRANT CREATE SESSION TO c##dbzuser CONTAINER=ALL;
@@ -137,7 +137,8 @@ CREATE TABLE LQUA
   SHAREPLEX_SOURCE_OPERATION  VARCHAR2(20 BYTE),
   SHAREPLEX_SOURCE_SCN        NUMBER,
   SHAREPLEX_SOURCE_ROWID      ROWID,
-  SUPPLEMENTAL LOG DATA (ALL) COLUMNS
+  SUPPLEMENTAL LOG DATA (ALL) COLUMNS,
+  PRIMARY KEY (MANDT, LGNUM, LQNUM)
 )
 TABLESPACE LOGMINER_TBS
 PCTFREE    10
@@ -154,6 +155,72 @@ STORAGE    (
 LOGGING
 NOCOMPRESS
 NOCACHE;
+CREATE TABLE LQUA_TARGET
+(
+  MANDT                       VARCHAR2(9 BYTE)  NOT NULL,
+  LGNUM                       VARCHAR2(9 BYTE)  NOT NULL,
+  LQNUM                       VARCHAR2(30 BYTE) NOT NULL,
+  MATNR                       VARCHAR2(54 BYTE) NOT NULL,
+  WERKS                       VARCHAR2(12 BYTE) NOT NULL,
+  CHARG                       VARCHAR2(30 BYTE) NOT NULL,
+  BESTQ                       VARCHAR2(3 BYTE)  NOT NULL,
+  SOBKZ                       VARCHAR2(3 BYTE)  NOT NULL,
+  SONUM                       VARCHAR2(48 BYTE) NOT NULL,
+  LGTYP                       VARCHAR2(9 BYTE)  NOT NULL,
+  LGPLA                       VARCHAR2(30 BYTE) NOT NULL,
+  PLPOS                       VARCHAR2(6 BYTE)  NOT NULL,
+  SKZUE                       VARCHAR2(3 BYTE)  NOT NULL,
+  SKZUA                       VARCHAR2(3 BYTE)  NOT NULL,
+  SKZSE                       VARCHAR2(3 BYTE)  NOT NULL,
+  SKZSA                       VARCHAR2(3 BYTE)  NOT NULL,
+  SKZSI                       VARCHAR2(3 BYTE)  NOT NULL,
+  SPGRU                       VARCHAR2(3 BYTE)  NOT NULL,
+  ZEUGN                       VARCHAR2(30 BYTE) NOT NULL,
+  BDATU                       VARCHAR2(24 BYTE) NOT NULL,
+  BZEIT                       VARCHAR2(18 BYTE) NOT NULL,
+  BTANR                       VARCHAR2(30 BYTE) NOT NULL,
+  BTAPS                       VARCHAR2(12 BYTE) NOT NULL,
+  EDATU                       VARCHAR2(24 BYTE) NOT NULL,
+  EZEIT                       VARCHAR2(18 BYTE) NOT NULL,
+  ADATU                       VARCHAR2(24 BYTE) NOT NULL,
+  AZEIT                       VARCHAR2(18 BYTE) NOT NULL,
+  ZDATU                       VARCHAR2(24 BYTE) NOT NULL,
+  WDATU                       VARCHAR2(24 BYTE) NOT NULL,
+  WENUM                       VARCHAR2(30 BYTE) NOT NULL,
+  WEPOS                       VARCHAR2(12 BYTE) NOT NULL,
+  LETYP                       VARCHAR2(9 BYTE)  NOT NULL,
+  MEINS                       VARCHAR2(9 BYTE)  NOT NULL,
+  GESME                       NUMBER(13,3)      NOT NULL,
+  VERME                       NUMBER(13,3)      NOT NULL,
+  EINME                       NUMBER(13,3)      NOT NULL,
+  AUSME                       NUMBER(13,3)      NOT NULL,
+  MGEWI                       NUMBER(11,3)      NOT NULL,
+  GEWEI                       VARCHAR2(9 BYTE)  NOT NULL,
+  TBNUM                       VARCHAR2(30 BYTE) NOT NULL,
+  IVNUM                       VARCHAR2(30 BYTE) NOT NULL,
+  IVPOS                       VARCHAR2(12 BYTE) NOT NULL,
+  BETYP                       VARCHAR2(3 BYTE)  NOT NULL,
+  BENUM                       VARCHAR2(30 BYTE) NOT NULL,
+  LENUM                       VARCHAR2(60 BYTE) NOT NULL,
+  QPLOS                       VARCHAR2(36 BYTE) NOT NULL,
+  VFDAT                       VARCHAR2(24 BYTE) NOT NULL,
+  QKAPV                       NUMBER(11,3)      NOT NULL,
+  KOBER                       VARCHAR2(9 BYTE)  NOT NULL,
+  LGORT                       VARCHAR2(12 BYTE) NOT NULL,
+  VIRGO                       VARCHAR2(3 BYTE)  NOT NULL,
+  TRAME                       NUMBER(13,3)      NOT NULL,
+  KZHUQ                       VARCHAR2(3 BYTE)  NOT NULL,
+  VBELN                       VARCHAR2(30 BYTE) NOT NULL,
+  POSNR                       VARCHAR2(18 BYTE) NOT NULL,
+  IDATU                       VARCHAR2(24 BYTE) NOT NULL,
+  MSR_INSP_GUID               RAW(16),
+  SGT_SCAT                    VARCHAR2(48 BYTE) NOT NULL,
+  SHAREPLEX_SOURCE_TIME       TIMESTAMP(6),
+  SHAREPLEX_SOURCE_OPERATION  VARCHAR2(20 BYTE),
+  SHAREPLEX_SOURCE_SCN        NUMBER,
+  SHAREPLEX_SOURCE_ROWID      ROWID,
+  PRIMARY KEY (MANDT, LGNUM, LQNUM)
+);
 --ALTER TABLE C##DBZUSER.LQUA ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 Insert into LQUA
    (MANDT, LGNUM, LQNUM, MATNR, WERKS,

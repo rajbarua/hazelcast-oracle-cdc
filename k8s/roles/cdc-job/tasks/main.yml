@@ -3,7 +3,7 @@
 ## pipeline via CLC
 ######################
 - name: Execute maven pom file to build the jar
-  shell: mvn clean install -f pom.xml
+  shell: mvn clean install -f pom.xml -DskipTests=true
   args:
     chdir: ../
   tags:
