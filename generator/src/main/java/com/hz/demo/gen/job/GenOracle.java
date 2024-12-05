@@ -1,23 +1,11 @@
-package com.hz.demo.cdc.job;
+package com.hz.demo.gen.job;
 
 import java.io.Serializable;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.apache.kafka.connect.json.JsonDeserializer;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.dataconnection.impl.JdbcDataConnection;
-import com.hazelcast.enterprise.jet.cdc.ChangeRecord;
-import com.hazelcast.enterprise.jet.cdc.DebeziumCdcSources;
-import com.hazelcast.enterprise.jet.cdc.Operation;
 import com.hazelcast.jet.Job;
 import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.pipeline.DataConnectionRef;
@@ -25,9 +13,8 @@ import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.ServiceFactories;
 import com.hazelcast.jet.pipeline.ServiceFactory;
 import com.hazelcast.jet.pipeline.Sinks;
-import com.hazelcast.jet.pipeline.StreamSource;
-import com.hazelcast.jet.pipeline.StreamStage;
-import com.hazelcast.jet.pipeline.WindowDefinition;
+import com.hazelcast.jet.pipeline.test.TestSources;
+import com.hazelcast.map.IMap;
 import com.hazelcast.sql.SqlResult;
 import com.hz.demo.pmt.domain.LquaRecord;
 
@@ -35,31 +22,19 @@ import com.hz.demo.pmt.domain.LquaRecord;
  * This class deploys a job that reads from Oracle via CDC and writes to a Map
  * with short expiry
  */
-public class CDCOracle implements Serializable{
+public class GenOracle implements Serializable {
 
-    private static final String JOB_NAME = "cdc-oracle-job";
-    private static final String SNAPSHOT_NAME = "cdc-oracle-job";
-    public static final String TOPIC = "lqua_raw";
+    private static final String JOB_NAME = "gen-oracle-job";
     public static final String TABLE_PREFIX = "C##DBZUSER";
-    public static final String SOURCE_DATA_CONNECTION_NAME = "source_oracle_db";
     public static final String TARGET_DATA_CONNECTION_NAME = "source_oracle_db";
-    private StreamSource<ChangeRecord> cdcSource = getCdcSource();
-    // private StreamSource<Entry<String, String>> cdcSource = getCdcSource();
-    private Properties rawKafkaProps = getRawKafkaProps();
+    private static final String SAMPLE_DATA_MAP = "sample-data-map";
+    public static final Integer SAMPLE_COUNT = 600000;
 
     public static void main(String[] args) {
-        new CDCOracle().run();
+        new GenOracle().run();
     }
 
-    public CDCOracle() {
-    }
-
-    /*
-     * Used by test code
-     */
-    public CDCOracle(StreamSource<ChangeRecord> cdcSource, Properties rawKafkaProps) {
-        this.cdcSource = cdcSource;
-        this.rawKafkaProps = rawKafkaProps;
+    public GenOracle() {
     }
 
     private void run() {
@@ -74,17 +49,9 @@ public class CDCOracle implements Serializable{
         Pipeline p = createPipeline();
         JobConfig jobConfig = new JobConfig()
                 .setName(JOB_NAME)
-                .addClass(CDCOracle.class);
+                .addClass(GenOracle.class);
         SqlResult jobs = instance.getSql().execute("SHOW JOBS;");
         // drop the job if it exists
-        String finalSnapshot = jobs.stream()
-                .filter(row -> row.getObject("name").equals(JOB_NAME))
-                .map(row -> "DROP JOB IF EXISTS \"" + JOB_NAME + "\" WITH SNAPSHOT \"" + SNAPSHOT_NAME + "\";")
-                .map(sql -> instance.getSql().execute(sql))
-                .findAny()
-                .map(rs -> SNAPSHOT_NAME)
-                .orElse(null);
-        jobConfig.setInitialSnapshotName(finalSnapshot);
         instance.getJet().getConfig().setResourceUploadEnabled(true);
         return instance.getJet().newJob(p, jobConfig);
     }
@@ -95,60 +62,32 @@ public class CDCOracle implements Serializable{
     private Pipeline createPipeline() {
 
         ServiceFactory<?, Connection> jdbcServiceFactory = ServiceFactories.sharedService(ctx -> {
-            return ctx.dataConnectionService().getAndRetainDataConnection(SOURCE_DATA_CONNECTION_NAME, JdbcDataConnection.class)
+            return ctx.dataConnectionService()
+                    .getAndRetainDataConnection(TARGET_DATA_CONNECTION_NAME, JdbcDataConnection.class)
                     .getConnection();
         },
                 con -> con.close())
                 .toNonCooperative();
-
+        // populateSourceIMap(Hazelcast.bootstrappedInstance());
         Pipeline pipeline = Pipeline.create();
-        StreamStage<ChangeRecord> filterStage = 
-        pipeline.readFrom(cdcSource)
-                .withNativeTimestamps(50)
-                .filter(changeRecord -> changeRecord.operation() != Operation.UNSPECIFIED);
-                
-        StreamStage<LquaRecord> enrichedStream = filterStage
-                .groupingKey(ChangeRecord::key)
-                // collect all records in a session (maybe caused by burst of updates).
-                // Window will close after 100 milliseconds of inactivity using a tumbling
-                // window will ALWAYS wait for a fix time whereas as session
-                // progresses when no data arrives for 100 ms
-                .window(WindowDefinition.session(TimeUnit.MILLISECONDS.toMillis(100)))
-                .distinct().setName("Pick any one for the key")
-                .mapUsingService(jdbcServiceFactory, (conn, record) -> {
-                    // FIXME make it async and batched maybe
-                    try (PreparedStatement stmt = conn.prepareStatement(
-                            "SELECT * FROM " + TABLE_PREFIX + ".lqua WHERE mandt = ? AND lgnum = ? AND lqnum = ?")) {
-                        Map<String, Object> map = record.key().toMap();
-                        stmt.setString(1, map.get("MANDT").toString());
-                        stmt.setString(2, map.get("LGNUM").toString());
-                        stmt.setString(3, map.get("LQNUM").toString());
-                        ResultSet rs = stmt.executeQuery();
-                        if (rs.next()) {
-                            return new LquaRecord(rs, record.getValue().timestamp());
-                        } else {
-                            return new LquaRecord();
-                        }
-                    }
+        pipeline
+                .readFrom(TestSources.itemStream(5000))
+                .withNativeTimestamps(10)
+                .map(evt -> {
+                    // generate a random integer between 0 and 600000
+                    int key = (int) (Math.random() * SAMPLE_COUNT);
+                    String keyStr = "" + key;
+                    return new LquaRecord(keyStr, keyStr, keyStr, "foo", "foo", "foo", "foo", "foo", "foo",
+                            "foo", "foo", "foo", "foo", "foo", "foo", "foo", "foo", "foo",
+                            "foo", "foo", "foo", "foo", "foo", "foo", "foo", "foo", "foo", "foo",
+                            "foo", "foo", "foo", "foo", "foo", 0.0, 0.0, 0.0,
+                            0.0, 0.0, "foo", "foo", "foo", "foo", "foo", "foo", "foo", "foo", "foo",
+                            0.0, "foo", "foo", "foo", 0.0, "foo", "foo",
+                            "foo", "foo", null, null, null, null, 0.0, null, false, 0);
                 })
-                .setName("Repopulated from source");
-        ;
-        // DELETE only
-        enrichedStream.filter(lqua -> lqua.isDeleted()).setName("Deleted Records")
                 .writeTo(Sinks.jdbc(
-                        "DELETE FROM " + TABLE_PREFIX + ".lqua_target WHERE mandt = ? AND lgnum = ? AND lqnum = ?",
-                        DataConnectionRef.dataConnectionRef(TARGET_DATA_CONNECTION_NAME), 
-                        (stmt, lqua) -> {
-                            stmt.setString(1, lqua.mandt());
-                            stmt.setString(2, lqua.lgnum());
-                            stmt.setString(3, lqua.lqnum());
-                        }))
-                .setName("Delete target row");
-        // INSERT/UPDATE only
-        enrichedStream.filter(lqua -> !lqua.isDeleted()).setName("Upserted Records")
-                // merge to target table
-                .writeTo(Sinks.jdbc(getMergeStatement(),
-                        DataConnectionRef.dataConnectionRef(TARGET_DATA_CONNECTION_NAME), 
+                        getMergeStatement(),
+                        DataConnectionRef.dataConnectionRef(TARGET_DATA_CONNECTION_NAME),
                         (stmt, record) -> {
                             int paramIndex = 1;
                             stmt.setString(paramIndex++, record.mandt());
@@ -206,17 +145,14 @@ public class CDCOracle implements Serializable{
                             stmt.setString(paramIndex++, record.kzhuq());
                             stmt.setString(paramIndex++, record.vbeln());
                             stmt.setString(paramIndex++, record.posnr());
-                            stmt.setLong(paramIndex++, record.timestamp());
-                            stmt.setLong(paramIndex++, System.currentTimeMillis());
-                        }))
-                .setName("Upsert target row");
-
+                            // stmt.setString(paramIndex++, record.idatu());
+                        }));
         return pipeline;
     }
 
     private String getMergeStatement() {
         return """
-                   MERGE INTO lqua_target t USING
+                   MERGE INTO lqua t USING
                 (SELECT ? as mandt, ? as lgnum, ? as lqnum, ? as matnr, ? as werks,
                       ? as charg, ? as bestq, ? as sobkz, ? as sonum, ? as lgtyp,
                       ? as lgpla, ? as plpos, ? as skzue, ? as skzua, ? as skzse,
@@ -227,8 +163,7 @@ public class CDCOracle implements Serializable{
                       ? as einme, ? as ausme, ? as mgewi, ? as gewei, ? as tbnum,
                       ? as ivnum, ? as ivpos, ? as betyp, ? as benum, ? as lenum,
                       ? as qplos, ? as vfdat, ? as qkapv, ? as kober, ? as lgort,
-                      ? as virgo, ? as trame, ? as kzhuq, ? as vbeln, ? as posnr,
-                      ? as read_timestamp, ? as write_timestamp) s
+                      ? as virgo, ? as trame, ? as kzhuq, ? as vbeln, ? as posnr) s
                 ON (t.mandt = s.mandt AND t.lgnum = s.lgnum AND t.lqnum = s.lqnum)
                 WHEN MATCHED THEN
                 UPDATE SET
@@ -249,7 +184,7 @@ public class CDCOracle implements Serializable{
                    t.qplos = s.qplos, t.vfdat = s.vfdat, t.qkapv = s.qkapv,
                    t.kober = s.kober, t.lgort = s.lgort, t.virgo = s.virgo,
                    t.trame = s.trame, t.kzhuq = s.kzhuq, t.vbeln = s.vbeln,
-                   t.posnr = s.posnr, t.read_timestamp = s.write_timestamp
+                   t.posnr = s.posnr
                 WHEN NOT MATCHED THEN
                 INSERT (mandt, lgnum, lqnum, matnr, werks, charg, bestq, sobkz,
                       sonum, lgtyp, lgpla, plpos, skzue, skzua, skzse, skzsa,
@@ -257,7 +192,7 @@ public class CDCOracle implements Serializable{
                       ezeit, adatu, azeit, zdatu, wdatu, wenum, wepos, letyp,
                       meins, gesme, verme, einme, ausme, mgewi, gewei, tbnum,
                       ivnum, ivpos, betyp, benum, lenum, qplos, vfdat, qkapv,
-                      kober, lgort, virgo, trame, kzhuq, vbeln, posnr, read_timestamp, write_timestamp)
+                      kober, lgort, virgo, trame, kzhuq, vbeln, posnr)
                 VALUES (s.mandt, s.lgnum, s.lqnum, s.matnr, s.werks, s.charg,
                       s.bestq, s.sobkz, s.sonum, s.lgtyp, s.lgpla, s.plpos,
                       s.skzue, s.skzua, s.skzse, s.skzsa, s.skzsi, s.spgru,
@@ -267,43 +202,19 @@ public class CDCOracle implements Serializable{
                       s.ausme, s.mgewi, s.gewei, s.tbnum, s.ivnum, s.ivpos,
                       s.betyp, s.benum, s.lenum, s.qplos, s.vfdat, s.qkapv,
                       s.kober, s.lgort, s.virgo, s.trame, s.kzhuq, s.vbeln,
-                      s.posnr, s.read_timestamp, s.write_timestamp)                    
+                      s.posnr)
                 """;
     }
 
-    /*
-     * Properties to connect to Kafka
-     */
-    private Properties getRawKafkaProps() {
-        Properties props = new Properties();
-        String bootstrapServers = "my-cluster-kafka-bootstrap.kafka:9092"; // Updated to include the namespace
-        props.setProperty("bootstrap.servers", bootstrapServers);
-        props.setProperty("key.deserializer", JsonDeserializer.class.getCanonicalName());
-        props.setProperty("value.deserializer", JsonDeserializer.class.getCanonicalName());
-        props.setProperty("key.serializer", StringSerializer.class.getCanonicalName());
-        props.setProperty("value.serializer", StringSerializer.class.getCanonicalName());
-        props.setProperty("auto.offset.reset", "earliest");
-
-        return props;
-    }
-
-    private StreamSource<ChangeRecord> getCdcSource() {
-    // private StreamSource<Entry<String, String>> getCdcSource() {
-        return DebeziumCdcSources.debezium("cdc_oracle", "io.debezium.connector.oracle.OracleConnector")
-                .setProperty("connector.class", "io.debezium.connector.oracle.OracleConnector")
-                .setProperty("database.hostname", "oracle-db23c-free-oracle-db23c-free.default.svc.cluster.local")
-                .setProperty("database.port", "1521")
-                .setProperty("database.user", "c##dbzuser")
-                .setProperty("database.password", "dbz")
-                .setProperty("database.dbname", "FREE")
-                .setProperty("database.pdb.name", "FREEPDB1")
-                .setProperty("tasks.max", "1")
-                .setProperty("table.include.list", TABLE_PREFIX + ".LQUA")
-                .changeRecord()
-                // .json()
-                // Debezium 1.9.x
-                // .setProperty("database.server.name", "server1")
-                .build();
+    private void populateSourceIMap(HazelcastInstance hz) {
+        IMap<KeyColumns, LquaRecord> data = hz.getMap(SAMPLE_DATA_MAP);
+        // loop 600000 times and populate the map with random data
+        for (int i = 0; i < SAMPLE_COUNT; i++) {
+            String keyStr = "" + i;
+            KeyColumns key = new KeyColumns(keyStr, keyStr, keyStr);
+            LquaRecord value = new LquaRecord();
+            data.put(key, value);
+        }
     }
 
 }

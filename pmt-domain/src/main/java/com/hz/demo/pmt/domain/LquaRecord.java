@@ -1,7 +1,6 @@
-package com.hz.demo.cdc.domain;
+package com.hz.demo.pmt.domain;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
 public record LquaRecord(
         String mandt,
@@ -66,17 +65,18 @@ public record LquaRecord(
         String shareplexSourceOperation,
         double shareplexSourceScn,
         java.sql.RowId shareplexSourceRowid,
-        boolean isDeleted) {
+        boolean isDeleted,
+        long timestamp) {
 
     public LquaRecord() {
         this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.0, 0.0, 0.0,
                 0.0, 0.0, null, null, null, null, null, null, null, null, null, 0.0, null, null, null, 0.0, null, null,
-                null, null, null, null, null, null, 0.0, null, true);
+                null, null, null, null, null, null, 0.0, null, true, 0);
 
     }
 
-    public LquaRecord(ResultSet rs) throws Exception {
+    public LquaRecord(ResultSet rs, long timestamp) throws Exception {
         this(rs.getString("MANDT"), rs.getString("LGNUM"), rs.getString("LQNUM"),
                 rs.getString("MATNR"),
                 rs.getString("WERKS"), rs.getString("CHARG"), rs.getString("BESTQ"),
@@ -108,7 +108,7 @@ public record LquaRecord(
                 rs.getBytes("MSR_INSP_GUID"), rs.getString("SGT_SCAT"),
                 rs.getTimestamp("SHAREPLEX_SOURCE_TIME"),
                 rs.getString("SHAREPLEX_SOURCE_OPERATION"), rs.getDouble("SHAREPLEX_SOURCE_SCN"),
-                rs.getRowId("SHAREPLEX_SOURCE_ROWID"), false);
+                rs.getRowId("SHAREPLEX_SOURCE_ROWID"), false, timestamp);
 
     }
 

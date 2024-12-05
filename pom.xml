@@ -18,6 +18,7 @@
     <modules>
         <module>pmt-domain</module>
         <module>cdc</module>
+        <module>generator</module>
     </modules>
     <dependencyManagement>
         <dependencies>

@@ -25,28 +25,33 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
-            <!-- <plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+                <version>3.6.0</version>
+                <configuration>
+                    <!-- put your configurations here -->
+                </configuration>
                 <executions>
                     <execution>
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                        <!-- include pmt-domain but exclude hazelcast-enterprise-->
                         <configuration>
                             <artifactSet>
                                 <includes>
-                                    <include>io.debezium:debezium-connector-oracle</include> 
-                                    <include>io.debezium:debezium-ddl-parser</include>
-                                    <include>org.antlr:antlr4-runtime</include>
+                                    <include>com.hz.demo:pmt-domain</include>
                                 </includes>
+                                <excludes>
+                                    <exclude>com.hazelcast:hazelcast-enterprise</exclude>
+                                </excludes>
                             </artifactSet>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin> -->
+            </plugin>
         </plugins>
     </build>
     <dependencies>

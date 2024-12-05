@@ -154,6 +154,13 @@
           memberAccess: LoadBalancer
         # tls:
         #   secretName: hazelcast-ssl
+        resources:
+          requests:
+            memory: "8Gi"
+            cpu: "7"
+          limits:
+            memory: "16Gi"
+            cpu: "7"
   tags:
     - hz-primary
     - hz
